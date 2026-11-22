@@ -58,6 +58,34 @@ gf.move_branch('feature', new[-1], commits[-1].sha)
 
 The repository is the `repo` argument, else `GITFAST_REPO`, else the current directory.
 
+## How to adopt in a project
+
+1. Find the project's scripts that rewrite history or read it file by file: `checkout`,
+   `cherry-pick`, `rebase -i`, `reset --hard`, `branch -f`, or a `git` call per file or commit in a
+   loop. Note what each one does, and which were one-off and may simply be deleted.
+2. Replace them:
+   - a fix folded into an earlier commit: `fold-into.sh`;
+   - a commit series rebuilt with edits (renames, substitutions, files moved between commits): a
+     script on `gitfast` (`commits()` → `Snapshot` per commit → `FastImport` → `move_branch()`);
+   - a check reading files over a branch: `Blobs` and `commits()` instead of `git show` per file.
+
+   Don't keep own copies of these helpers in the project: import `gitfast` from this folder.
+3. Set the default paths of `fold-into.sh` (relative to the repository's root), e.g. the sources
+   and the docs:
+
+   ```sh
+   git config --add fold.path src
+   git config --add fold.path README.md
+   ```
+
+4. Check each rewritten script on a temporary branch or a clone, not on a working branch: its result
+   must equal the old script's (the commits' trees, authors and messages), and a failing step must
+   leave the branch where it was.
+5. Update the project's docs and agent instructions that name the old scripts.
+
+A custom series script checks every step (`|| fail` in Bash; `set -e` doesn't stop inside some
+compound commands) and compares the new tip's tree with the expected one before moving the branch.
+
 ## Tests
 
 ```sh
