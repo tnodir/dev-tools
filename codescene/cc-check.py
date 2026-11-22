@@ -4,9 +4,10 @@ in a branch's condition (Complex Conditional), the nested blocks (Bumpy Road), t
 lines of code (Large Method) and the file's ones (Lines of Code in a Single File).
 
 Usage: python <the folder>/cc-check.py [-C 8] [-A 4] [-L 1] [-B 1] [-M 69] [-F 999]
-       [--changed] [<files>...]
+       [--changed] [--if-braces] [<files>...]
   --changed   also check the .c/.cpp/.h files changed vs HEAD (staged, unstaged and untracked)
-              and the braces of their changed if's bodies (check-if-braces.py HEAD)
+  --if-braces with --changed: also the braces of the changed if's bodies (check-if-braces.py HEAD),
+              a code style's convention, not CodeScene's rule
 Run it from the repository's root: the changed files' paths are relative to it.
 
 lizard loses track of the functions after file-scope static_assert()s,
@@ -427,6 +428,8 @@ def main():
     parser.add_argument("-F", dest="file_lines", type=int, default=999,
             help="max allowed lines of code of a file")
     parser.add_argument("--changed", action="store_true")
+    parser.add_argument("--if-braces", action="store_true",
+            help="with --changed: check the braces of the changed if's bodies")
     parser.add_argument("files", nargs="*")
     limits = parser.parse_args()
 
@@ -437,7 +440,7 @@ def main():
     disabled = sum(func_disabled for _, func_disabled in results)
 
     # The convention: an `if` returning a computed expression has braces
-    if limits.changed:
+    if limits.changed and limits.if_braces:
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "check-if-braces.py")
         r = subprocess.run([sys.executable, script, "HEAD"], capture_output=True, text=True,
                            encoding="utf-8")
