@@ -7,3 +7,4 @@ Development helpers shared by projects, each in its own folder with its README a
   earlier commit.
 - [codescene](codescene/README.md): local checks of C/C++ code by CodeScene's Code Health rules
   (lizard-based), and of the braces of the `if`s' bodies.
+- [breakpad](breakpad/README.md): opens a crash dump in WinDbg with the program's PDB files.
