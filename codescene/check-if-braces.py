@@ -1,6 +1,6 @@
 """Finds an `if` without braces whose body isn't a simple jump (a return of a computed
 expression, a call, an assignment), among the lines added by the branch (git diff
-master...HEAD). Simple jumps may stay without braces: `continue;`, `break;`, `goto`,
+<the default branch>...HEAD: origin/HEAD's, else master). Simple jumps may stay without braces: `continue;`, `break;`, `goto`,
 `return;`, a return of a constant (TRUE/FALSE/true/false/NULL/nullptr/{}/a number/an ALL_CAPS
 name, a qualified enum like Foo::Bar) or a plain local variable.
 
@@ -133,10 +133,17 @@ def check_file(repo, f, nums):
     return found
 
 
+def default_branch(repo):
+    """origin/HEAD's branch, else master"""
+    r = subprocess.run(['git', 'symbolic-ref', '-q', '--short', 'refs/remotes/origin/HEAD'],
+                       cwd=repo, capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else 'master'
+
+
 def main():
     repo = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True,
                           text=True, check=True).stdout.strip()
-    base = sys.argv[1] if len(sys.argv) > 1 else 'master...HEAD'
+    base = sys.argv[1] if len(sys.argv) > 1 else default_branch(repo) + '...HEAD'
 
     added = added_lines(repo, base)
     found = sum(check_file(repo, f, nums) for f, nums in added.items())
