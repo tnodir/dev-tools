@@ -23,7 +23,7 @@ IF_STARTS = ('if (', '} else if (', 'else if (')
 
 # A jump or a block, or a continued expression: not a body without braces
 NOT_BODY_STARTS = ('continue', 'break', 'goto', '{',
-                   '.', '&&', '||', '==', '!=', '?', ':', '+', '-', '<<', '>>', ')', ',', '//',
+                   '.', '&', '|', '==', '!=', '?', ':', '+', '-', '<<', '>>', ')', ',', '//',
                    '/*', '#')
 
 # The condition's start is looked for within the last few lines
@@ -95,9 +95,13 @@ def unbraced_body(lines, i, nums):
 
 
 def condition_start(lines, i):
-    """The line of the `if` whose condition ends at the line i, or -1"""
+    """The line of the `if` whose condition ends at the line i, or -1: a line before it ending a
+    statement or a block's line (e.g. an `if (…) {` above the line i) isn't the condition's"""
     for start in range(i, max(i - CONDITION_MAX_LINES, -1), -1):
-        if lines[start].strip().startswith(IF_STARTS):
+        s = strip_comment(lines[start])
+        if start < i and s.endswith(('{', ';', '}')):
+            return -1
+        if s.startswith(IF_STARTS):
             return start
     return -1
 
